@@ -9,45 +9,41 @@ import noisereduce as nr
 from pydub import AudioSegment, silence
 from faster_whisper import WhisperModel
 
-# --- Custom CSS for UI ---
-st.markdown(
-    """
-    <style>
-    /* [Votre CSS existant reste inchangé] */
-    </style>
-    """, 
-    unsafe_allow_html=True
+
+st.set_page_config(
+    page_icon="🗣",
+    page_title="Transcriber"
 )
 
 # --- Sidebar Configuration ---
 with st.sidebar:
     st.markdown(
         "<div style='border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1.5rem;'>"
-        "<h1 style='color: #4b4276; font-size: 1.8rem;'>Paramètres de traitement</h1>"
+        "<h1 style='color: #4b4276; font-size: 1.8rem;'>Processing Settings</h1>"
         "</div>", 
         unsafe_allow_html=True
     )
     
     # Paramètres de transcription
-    st.subheader("Paramètres de transcription")
+    st.subheader("Transcription Settings")
     model_choice = st.selectbox(
-        "Modèle de transcription",
+        "Transcription Model",
         options=["small", "base", "medium", "large"],
         index=0,
-        help="Les modèles plus grands offrent une meilleure précision mais sont plus lents"
+        help="Larger models offer higher accuracy but may take longer to process."
     )
     
     # Nouveaux paramètres audio interactifs
-    st.subheader("Paramètres audio")
-    lowcut = st.slider("Fréquence basse (Hz)", 100, 1000, 300)
-    highcut = st.slider("Fréquence haute (Hz)", 2000, 8000, 3400)
-    amplification_factor = st.slider("Facteur d'amplification", 1.0, 5.0, 1.5, step=0.1)
-    min_silence_len = st.slider("Longueur minimale du silence (ms)", 100, 1000, 500)
-    silence_thresh = st.slider("Seuil de silence (dB)", -60, -20, -40)
+    st.subheader("Audio Settings")
+    lowcut = st.slider("Low Frequency Cutoff (Hz)", 100, 1000, 300)
+    highcut = st.slider("High Frequency Cutoff (Hz)", 2000, 8000, 3400)
+    amplification_factor = st.slider("Amplification Factor", 1.0, 5.0, 1.5, step=0.1)
+    min_silence_len = st.slider("Minimum Silence Duration (ms)", 100, 1000, 500)
+    silence_thresh = st.slider("Silence Threshold (dB)", -60, -20, -40)
     
     st.markdown(
         "<div style='margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;'>"
-        "<p style='font-size: 0.9rem; color: #6c757d;'>Les modifications des paramètres s'appliquent au prochain traitement.</p>"
+        "<p style='font-size: 0.9rem; color: #6c757d;'>Changes will apply to your next audio processing task.</p>"
         "</div>",
         unsafe_allow_html=True
     )
@@ -55,8 +51,8 @@ with st.sidebar:
 # --- Main Page ---
 st.markdown(
     "<div class='header-container'>"
-    "<div class='title'>AudioClean Pro</div>"
-    "<div class='subtitle'>Solution professionnelle de nettoyage audio et transcription de haute précision</div>"
+    "<div class='title'>Audio & Video Transcriber</div>"
+    "<div class='subtitle'>Crystal-clear transcription with smart audio cleanup</div>"
     "</div>", 
     unsafe_allow_html=True
 )
@@ -64,7 +60,7 @@ st.markdown(
 # File uploader
 st.markdown(
     "<div class='upload-container'>"
-    "<h3 style='color: #4b4276; margin-bottom: 1.5rem;'>Déposer un fichier média</h3>"
+    "<h3 style='color: #4b4276; margin-bottom: 1.5rem;'>Upload a Media File</h3>"
     "</div>",
     unsafe_allow_html=True
 )
@@ -78,7 +74,7 @@ uploaded = st.file_uploader(
 if not uploaded:
     st.markdown(
         "<div style='text-align: center; padding: 2rem; color: #6c757d;'>"
-        "<p style='font-size: 1.1rem;'>Sélectionnez un fichier audio ou vidéo pour commencer le traitement</p>"
+        "<p style='font-size: 1.1rem;'>Please upload an audio or video file to start processing</p>"
         "</div>",
         unsafe_allow_html=True
     )
@@ -87,10 +83,10 @@ if not uploaded:
 # Processing steps
 st.markdown(
     "<div class='process-steps'>"
-    "<h3 style='color: #4b4276; margin-bottom: 1.5rem;'>Processus de traitement audio</h3>"
-    f"<div class='step-item'><div class='step-number'>1</div><div>Filtre passe-bande ({lowcut}-{highcut} Hz)</div></div>"
-    f"<div class='step-item'><div class='step-number'>2</div><div>Réduction du bruit (amplification ×{amplification_factor})</div></div>"
-    f"<div class='step-item'><div class='step-number'>3</div><div>Suppression des silences ({min_silence_len}ms, {silence_thresh}dB)</div></div>"
+    "<h3 style='color: #4b4276; margin-bottom: 1.5rem;'>Audio Processing Pipeline</h3>"
+    f"<div class='step-item'><div class='step-number'>1</div><div>Voice filtering bandpass ({lowcut}-{highcut} Hz)</div></div>"
+    f"<div class='step-item'><div class='step-number'>2</div><div>Noise reduction (amplified ×{amplification_factor})</div></div>"
+    f"<div class='step-item'><div class='step-number'>3</div><div>Silence removal ({min_silence_len}ms, {silence_thresh}dB)</div></div>"
     
     "</div>",
     unsafe_allow_html=True
@@ -112,7 +108,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 # 1) Décodage
 status.markdown(
     "<div class='status-message'>"
-    "<span class='status-icon'>🔄</span> Décodage du fichier source..."
+    "<span class='status-icon'>🔄</span> Decoding the uploaded media file..."
     "</div>", 
     unsafe_allow_html=True
 )
@@ -141,7 +137,7 @@ def bandpass_filter(data, lowcut, highcut, fs, order=4):
 # Filtre passe-bande
 status.markdown(
     "<div class='status-message'>"
-    "<span class='status-icon'>🔊</span> Application du filtre vocal..."
+    "<span class='status-icon'>🔊</span> Applying vocal filter..."
     "</div>", 
     unsafe_allow_html=True
 )
@@ -152,7 +148,7 @@ filtered = bandpass_filter(mono, lowcut, highcut, rate)  # Utilisation des param
 # Réduction du bruit
 status.markdown(
     "<div class='status-message'>"
-    "<span class='status-icon'>🧹</span> Réduction des interférences..."
+    "<span class='status-icon'>🧹</span> Reducing background noise..."
     "</div>", 
     unsafe_allow_html=True
 )
@@ -162,7 +158,7 @@ cleaned = nr.reduce_noise(y=filtered, sr=rate, stationary=True)
 # Amplification
 status.markdown(
     "<div class='status-message'>"
-    "<span class='status-icon'>📈</span> Optimisation du volume..."
+    "<span class='status-icon'>📈</span> Adjusting volume levels..."
     "</div>", 
     unsafe_allow_html=True
 )
@@ -172,7 +168,7 @@ amplified = np.clip(cleaned * amplification_factor, -1.0, 1.0)  # Utilisation du
 # Suppression des silences
 status.markdown(
     "<div class='status-message'>"
-    "<span class='status-icon'>✂️</span> Élimination des silences..."
+    "<span class='status-icon'>✂️</span> Removing silent segments..."
     "</div>", 
     unsafe_allow_html=True
 )
@@ -192,7 +188,7 @@ for c in chunks:
 # 3) Export nettoyé
 status.markdown(
     "<div class='status-message'>"
-    "<span class='status-icon'>✅</span> Traitement audio terminé avec succès"
+    "<span class='status-icon'>🙂</span> Audio processing completed"
     "</div>", 
     unsafe_allow_html=True
 )
@@ -204,7 +200,7 @@ progress.progress(100)
 
 # Résultats audio
 st.markdown("<div class='result-card'>", unsafe_allow_html=True)
-st.markdown("<h3 style='color: #4b4276; margin-bottom: 1.5rem;'>Résultat audio traité</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #4b4276; margin-bottom: 1.5rem;'>Processed Audio Output</h3>", unsafe_allow_html=True)
 
 col1, col2 = st.columns([1, 2])
 with col1:
@@ -224,16 +220,16 @@ st.markdown("</div>", unsafe_allow_html=True)
 
 # 4) Transcription
 st.markdown("<div class='result-card' style='margin-top: 2rem;'>", unsafe_allow_html=True)
-st.markdown("<h3 style='color: #4b4276; margin-bottom: 1.5rem;'>Service de transcription</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #4b4276; margin-bottom: 1.5rem;'>Transcription Service</h3>", unsafe_allow_html=True)
 
-if st.button("Démarrer la transcription", use_container_width=True, key="transcribe_btn"):
+if st.button("Start Transcription", use_container_width=True, key="transcribe_btn"):
     progress_bar = st.progress(0)
     status_text = st.empty()
     transcription_box = st.empty()
     
     status_text.markdown(
         "<div class='status-message'>"
-        " Initialisation du moteur de transcription..."
+        " Initializing transcription engine..."
         "</div>", 
         unsafe_allow_html=True
     )
@@ -242,7 +238,7 @@ if st.button("Démarrer la transcription", use_container_width=True, key="transc
         model = WhisperModel(model_choice, device="cpu")
         status_text.markdown(
             "<div class='status-message'>"
-            "<span class='status-icon'>🔍</span> Analyse et transcription en cours..."
+            "<span class='status-icon'>🔍</span> Analyzing and transcribing..."
             "</div>", 
             unsafe_allow_html=True
         )
@@ -271,7 +267,7 @@ if st.button("Démarrer la transcription", use_container_width=True, key="transc
                     status_text.markdown(
                         f"<div class='status-message'>"
                         f"<span class='status-icon'>🔍</span> "
-                        f"Transcription en cours: {pct*100:.1f}%"
+                        f"Transcribing: {pct*100:.1f}%"
                         "</div>", 
                         unsafe_allow_html=True
                     )
@@ -279,18 +275,18 @@ if st.button("Démarrer la transcription", use_container_width=True, key="transc
         progress_bar.progress(1.0)
         status_text.markdown(
             "<div class='status-message'>"
-            f"<span class='status-icon'>✅</span> Transcription terminée (Langue: {info.language})"
+            f"<span class='status-icon'>😀</span> Transcription completed (Langue: {info.language})"
             "</div>", 
             unsafe_allow_html=True
         )
         
-        st.markdown("<h4 style='margin-top: 1.5rem; margin-bottom: 1rem;'>Résultat complet</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='margin-top: 1.5rem; margin-bottom: 1rem;'>Full Transcription</h4>", unsafe_allow_html=True)
         st.markdown(f"<div class='transcription-box'>{full_text}</div>", unsafe_allow_html=True)
         
         # Export TXT
         txt_data = f"Langue détectée : {info.language}\n\n{full_text}"
         st.download_button(
-            "Télécharger la transcription",
+            "Download Transcription",
             data=txt_data,
             file_name=f"{base}_transcript.txt",
             mime="text/plain",
